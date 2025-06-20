@@ -1,0 +1,20 @@
+@sipho.visitor_HostAddress = http://localhost:5188
+
+GET {{sipho.visitor_HostAddress}}/
+Accept: application/json
+###
+
+POST {{sipho.visitor_HostAddress}}/api/visitor/entry
+Accept: application/json
+Content-Type: application/json
+
+{
+  "licensePlate": "null",
+  "visitorDocumentId": "",
+  # "visitorDocumentTypeId": 0,
+  "visitorGivenNames": "",
+  "visitorSurNames": "s",
+  "visitorPhoneNumber": "",
+  "visitorEmail": "user@example"
+}
+###
