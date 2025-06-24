@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.dionos-table-container {
+  @apply bg-white rounded-2xl shadow-xl p-4 my-6 overflow-x-auto;
+  backdrop-filter: blur(8px);
+  background-color: rgba(255,255,255,0.7);
+}
+
+.dionos-table {
+  @apply min-w-full rounded-xl overflow-hidden;
+}
+
+.dionos-table th {
+  @apply bg-white text-gray-500 font-semibold text-sm uppercase tracking-wide px-6 py-4;
+  background-color: rgba(255,255,255,0.8);
+}
+
+.dionos-table td {
+  @apply text-gray-700 text-base px-6 py-4;
+  background-color: rgba(255,255,255,0.6);
+}
+
+.dionos-table tr {
+  @apply transition-colors;
+}
+
+.dionos-table tbody tr:hover {
+  background-color: rgba(238, 242, 255, 0.6); /* Tailwind's bg-indigo-50 is #eef2ff */
+}
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  .factura-print, .factura-print * {
+    visibility: visible !important;
+  }
+  .factura-print {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 350px !important;
+    min-height: 420px !important;
+    background: white !important;
+    z-index: 99999 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 16px !important;
+    display: block !important;
+  }
+}
