@@ -12,7 +12,7 @@ const Factura = ({ vehiculo, factura, onClose }) => {
 
   return (
     <div className="factura-print w-full max-w-sm mx-auto bg-white rounded-xl shadow-lg border border-slate-300 p-6 space-y-5 print:p-4 print:shadow-none print:border-none print:rounded-none font-mono">
-      {/* Logo y nombre */}
+      {/* Logo y nombre re quioere o no fatcura electronica y calculadora de valor que reste el valor totalizado, exacto*/}
       <div className="flex flex-col items-center mb-2">
         <span className="inline-block bg-indigo-100 rounded-full p-3 mb-2">
           {/* Puedes reemplazar este SVG por el logo real de Toledo */}
@@ -190,7 +190,7 @@ const ParkingExitModal = ({ isOpen, onClose, onRegisterExit, vehiculo }) => {
                     <strong>Visitante:</strong> {vehiculo.visitorName}
                   </p>
                   <p>
-                    <strong>Apartamento:</strong> {vehiculo.apartment}
+                    <strong>Unidad residencial:</strong> {vehiculo.apartment}
                   </p>
                   <p>
                     <strong>Interior:</strong> {vehiculo.interior}

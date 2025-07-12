@@ -46,7 +46,7 @@ const ResidentTable = () => {
         <thead className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
           <tr>
             <Th>Nombre</Th>
-            <Th>Apartamento</Th>
+            <Th>Unidad residencial</Th>
             <Th>Interior</Th>
             <Th>Teléfono</Th>
             <Th>Parqueadero</Th>
@@ -85,7 +85,9 @@ const Th = ({ children }) => (
 );
 
 const Td = ({ children }) => (
-  <td className="px-4 py-3 border-t border-slate-100 whitespace-nowrap">{children}</td>
+  <td className="px-4 py-3 border-t border-slate-100 whitespace-nowrap">
+    {children}
+  </td>
 );
 
 export default ResidentTable;
