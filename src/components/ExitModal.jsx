@@ -18,6 +18,7 @@ import {
   FaUser,
   FaEnvelope,
 } from "react-icons/fa";
+import ticketService from "../services/ticketService"; // <--- AGREGA ESTA LÍNEA
 
 const ExitModal = ({ isOpen, onClose, parkingData, onExitConfirm }) => {
   const [step, setStep] = useState(1);
@@ -72,6 +73,31 @@ const ExitModal = ({ isOpen, onClose, parkingData, onExitConfirm }) => {
     );
     onClose();
   };
+
+  function buildTicketData() {
+    // Si es vehículo, usa los datos de parqueadero
+    if (isVehicle) {
+      return {
+        ticketNumber: parkingData.id,
+        entryTime: parkingData.entryTime,
+        visitorName: parkingData.visitorName,
+        apartment: parkingData.apartment,
+        interior: parkingData.interior,
+        licensePlate: parkingData.licensePlate,
+        vehicleType: parkingData.type === "car" ? "Carro" : "Moto",
+      };
+    }
+    // Si es solo visitante, muestra un resumen simple
+    return {
+      ticketNumber: parkingData.id || "VISITA",
+      entryTime: parkingData.entryTime || new Date().toISOString(),
+      visitorName: parkingData.visitorName || parkingData.name,
+      apartment: parkingData.apartment,
+      interior: parkingData.interior,
+      licensePlate: parkingData.licensePlate || "-",
+      vehicleType: "-",
+    };
+  }
 
   return (
     <AnimatePresence>
@@ -452,7 +478,10 @@ const ExitModal = ({ isOpen, onClose, parkingData, onExitConfirm }) => {
                       <FaArrowLeft /> Editar datos
                     </button>
                     <button
-                      onClick={handleConfirm}
+                      onClick={async () => {
+                        await ticketService.printTicket(buildTicketData());
+                        handleConfirm();
+                      }}
                       className="px-8 py-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold hover:shadow-lg transition-all flex items-center gap-2"
                       type="button"
                     >
@@ -486,8 +515,7 @@ const ParkingExit = () => {
         onClose={() => setExitModalOpen(false)}
         parkingData={exitData}
         onExitConfirm={(data, invoiceData) => {
-          // Lógica para confirmar salida y manejo de datos
-          console.log("Salida confirmada:", data, invoiceData);
+           console.log("Salida confirmada:", data, invoiceData);
           setExitModalOpen(false);
         }}
       />

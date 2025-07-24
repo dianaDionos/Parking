@@ -1,8 +1,30 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { FaBoxOpen, FaCheckCircle } from "react-icons/fa";
+import { FaBoxOpen, FaCheckCircle, FaSearch } from "react-icons/fa";
+import Paginator from "./Paginator";
 
 export default function PackageTable({ paqueteria = [], onEntregar }) {
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(5);
+
+  const filtered = paqueteria.filter((r) => {
+    const s = search.toLowerCase();
+    return (
+      r.nombre?.toLowerCase().includes(s) ||
+      r.apto?.toLowerCase().includes(s) ||
+      r.interior?.toLowerCase().includes(s) ||
+      r.paquetes?.some((p) => p.descripcion?.toLowerCase().includes(s))
+    );
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [perPage, filtered.length, totalPages]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -10,6 +32,21 @@ export default function PackageTable({ paqueteria = [], onEntregar }) {
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="rounded-2xl border border-yellow-200 shadow-lg bg-white p-4 md:p-6 max-w-5xl mx-auto"
     >
+      <div className="mb-4 flex flex-col md:flex-row gap-2 items-center justify-between">
+        <div className="relative w-full md:w-72">
+          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-yellow-400" />
+          <input
+            type="text"
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-yellow-200 bg-yellow-50 text-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-100 transition"
+            placeholder="Buscar residente, apto, detalle..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <span className="text-xs text-yellow-500">
+          {filtered.length} paquetes
+        </span>
+      </div>
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm text-slate-700">
           <thead>
@@ -35,14 +72,14 @@ export default function PackageTable({ paqueteria = [], onEntregar }) {
             </tr>
           </thead>
           <tbody>
-            {paqueteria.length === 0 ? (
+            {paginated.length === 0 ? (
               <tr>
                 <Td colSpan={6} className="text-center py-8 text-slate-400">
                   No hay paquetes pendientes de entrega.
                 </Td>
               </tr>
             ) : (
-              paqueteria.map((registro, idx) => (
+              paginated.map((registro, idx) => (
                 <motion.tr
                   key={idx}
                   initial={{ opacity: 0 }}
@@ -101,6 +138,14 @@ export default function PackageTable({ paqueteria = [], onEntregar }) {
           </tbody>
         </table>
       </div>
+      <Paginator
+        page={page}
+        setPage={setPage}
+        totalPages={totalPages}
+        perPage={perPage}
+        setPerPage={setPerPage}
+        totalItems={paqueteria.length}
+      />
     </motion.div>
   );
 }

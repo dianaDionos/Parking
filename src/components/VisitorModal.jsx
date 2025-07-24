@@ -4,6 +4,7 @@ import ParkingTicket from "./ParkingTicket";
 import parkingService from "../services/parkingService";
 import ticketService from "../services/ticketService";
 import ModernInput from "./ModernInput";
+import { validateVisitor } from "../utils/validators";
 
 const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
   const mockResidents = [
@@ -32,6 +33,7 @@ const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [generatedTicket, setGeneratedTicket] = useState(null);
   const [showFacturaModal, setShowFacturaModal] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const filteredResidents = mockResidents.filter((r) =>
     `${r.name} ${r.apartment} ${r.interior}`
@@ -40,7 +42,9 @@ const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
   );
 
   const handleNext = () => {
-    // Si paso 2 y trae vehículo, ir a paso 3
+    const newErrors = validateVisitor(visitor);
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
     if (step === 2 && visitor.hasVehicle) {
       setStep(3);
     } else if (step === 3 && visitor.hasVehicle && visitor.electronicBilling) {
@@ -61,6 +65,10 @@ const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const newErrors = validateVisitor(visitor);
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
+
     const now = new Date();
     const visitorData = {
       ...visitor,
@@ -101,9 +109,6 @@ const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
       }
     }
     onAddVisitor(visitorData);
-    if (!visitor.hasVehicle) {
-      handleClose();
-    }
   };
 
   const handleFacturaSubmit = () => {
@@ -157,6 +162,7 @@ const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 400 }}
             className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden"
+            style={{ maxHeight: "90vh", overflowY: "auto" }} // <-- scroll aquí
           >
             {/* Header */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6">
@@ -254,57 +260,56 @@ const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
                         placeholder="Buscar por nombre, Unidad residencial o torre..."
                         value={residentSearch}
                         onChange={(e) => setResidentSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                        className="w-full rounded-xl border border-gray-200 px-4 py-2 mb-2"
                       />
-                    </div>
-
-                    <div className="bg-gray-50 rounded-xl overflow-hidden border border-gray-200">
-                      <div className="max-h-60 overflow-y-auto">
-                        {filteredResidents.length === 0 ? (
-                          <div className="p-6 text-center text-gray-500">
-                            No se encontraron residentes
-                          </div>
-                        ) : (
-                          filteredResidents.map((r, idx) => (
-                            <motion.div
-                              key={idx}
-                              whileHover={{ backgroundColor: "#f3f4f6" }}
-                              onClick={() => setSelectedResident(r)}
-                              className={`p-4 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors ${
-                                selectedResident?.apartment === r.apartment
-                                  ? "bg-indigo-50 border-indigo-200"
-                                  : ""
-                              }`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <h4 className="font-medium text-gray-900">
-                                    {r.name}
-                                  </h4>
-                                  <p className="text-sm text-gray-600">
-                                    {r.apartment} - {r.interior}
-                                  </p>
-                                </div>
-                                {selectedResident?.apartment ===
-                                  r.apartment && (
-                                  <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
-                                    <svg
-                                      className="w-4 h-4 text-white"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
+                      <div className="bg-gray-50 rounded-xl overflow-hidden border border-gray-200">
+                        <div className="max-h-60 overflow-y-auto">
+                          {filteredResidents.length === 0 ? (
+                            <div className="p-6 text-center text-gray-500">
+                              No se encontraron residentes
+                            </div>
+                          ) : (
+                            filteredResidents.map((r, idx) => (
+                              <motion.div
+                                key={idx}
+                                whileHover={{ backgroundColor: "#f3f4f6" }}
+                                onClick={() => setSelectedResident(r)}
+                                className={`p-4 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors ${
+                                  selectedResident?.apartment === r.apartment
+                                    ? "bg-indigo-50 border-indigo-200"
+                                    : ""
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h4 className="font-medium text-gray-900">
+                                      {r.name}
+                                    </h4>
+                                    <p className="text-sm text-gray-600">
+                                      {r.apartment} - {r.interior}
+                                    </p>
                                   </div>
-                                )}
-                              </div>
-                            </motion.div>
-                          ))
-                        )}
+                                  {selectedResident?.apartment ===
+                                    r.apartment && (
+                                    <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center">
+                                      <svg
+                                        className="w-4 h-4 text-white"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
+                              </motion.div>
+                            ))
+                          )}
+                        </div>
                       </div>
                     </div>
 
@@ -357,7 +362,7 @@ const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
                   </motion.div>
                 )}
 
-                {/* Paso 2: Datos del visitante */}
+                {/* Paso 2: Información del visitante */}
                 {step === 2 && (
                   <motion.div
                     key="step2"
@@ -392,87 +397,139 @@ const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <ModernInput
-                        label="Nombre completo"
-                        value={visitor.name}
-                        setValue={(v) => setVisitor({ ...visitor, name: v })}
-                        icon={
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                          </svg>
-                        }
-                      />
-                      <ModernInput
-                        label="Teléfono"
-                        value={visitor.phone}
-                        setValue={(v) => setVisitor({ ...visitor, phone: v })}
-                        icon={
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                            />
-                          </svg>
-                        }
-                      />
-                      <ModernInput
-                        label="Cédula"
-                        value={visitor.id}
-                        setValue={(v) => setVisitor({ ...visitor, id: v })}
-                        icon={
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
-                            />
-                          </svg>
-                        }
-                      />
-                      <ModernInput
-                        label="Correo electrónico"
-                        value={visitor.email}
-                        type="email"
-                        setValue={(v) => setVisitor({ ...visitor, email: v })}
-                        icon={
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                            />
-                          </svg>
-                        }
-                      />
+                      <div>
+                        <ModernInput
+                          label="Nombre completo"
+                          value={visitor.name}
+                          setValue={(v) => {
+                            setVisitor({ ...visitor, name: v });
+                            setErrors({ ...errors, name: undefined });
+                          }}
+                          icon={
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                              />
+                            </svg>
+                          }
+                          className={
+                            errors.name ? "border-red-400 ring-2 ring-red-300" : ""
+                          }
+                        />
+                        {errors.name && (
+                          <div className="text-xs text-red-500 mt-1">
+                            {errors.name}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <ModernInput
+                          label="Teléfono"
+                          value={visitor.phone}
+                          setValue={(v) => {
+                            setVisitor({ ...visitor, phone: v });
+                            setErrors({ ...errors, phone: undefined });
+                          }}
+                          icon={
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 5a2 2 0 002-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                              />
+                            </svg>
+                          }
+                          className={
+                            errors.phone ? "border-red-400 ring-2 ring-red-300" : ""
+                          }
+                        />
+                        {errors.phone && (
+                          <div className="text-xs text-red-500 mt-1">
+                            {errors.phone}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <ModernInput
+                          label="Cédula"
+                          value={visitor.id}
+                          setValue={(v) => {
+                            setVisitor({ ...visitor, id: v });
+                            setErrors({ ...errors, id: undefined });
+                          }}
+                          icon={
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V4a2 2 0 114 0v2m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"
+                              />
+                            </svg>
+                          }
+                          className={
+                            errors.id ? "border-red-400 ring-2 ring-red-300" : ""
+                          }
+                        />
+                        {errors.id && (
+                          <div className="text-xs text-red-500 mt-1">
+                            {errors.id}
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <ModernInput
+                          label="Correo electrónico"
+                          value={visitor.email}
+                          type="email"
+                          setValue={(v) => {
+                            setVisitor({ ...visitor, email: v });
+                            setErrors({ ...errors, email: undefined });
+                          }}
+                          icon={
+                            <svg
+                              className="w-5 h-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                              />
+                            </svg>
+                          }
+                          className={
+                            errors.email ? "border-red-400 ring-2 ring-red-300" : ""
+                          }
+                        />
+                        {errors.email && (
+                          <div className="text-xs text-red-500 mt-1">
+                            {errors.email}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-4 mt-4">
@@ -496,7 +553,7 @@ const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
 
                     <div className="flex justify-between pt-4">
                       <motion.button
-                        whileHover={{ scale: 1.02 }}
+                        whileHover={{ scale: 1.04 }}
                         whileTap={{ scale: 0.98 }}
                         type="button"
                         onClick={handleBack}
@@ -510,6 +567,9 @@ const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
                         type="button"
                         className="px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold hover:shadow-lg transition-all"
                         onClick={() => {
+                          const newErrors = validateVisitor(visitor);
+                          setErrors(newErrors);
+                          if (Object.keys(newErrors).length > 0) return; // No avanza si hay errores
                           if (visitor.hasVehicle) setStep(3);
                           else handleSubmit({ preventDefault: () => {} });
                         }}
@@ -584,32 +644,30 @@ const VisitorModal = ({ isOpen, onClose, onAddVisitor }) => {
                           </svg>
                         }
                       />
-                      <ModernInput
-                        label="Tipo de vehículo"
-                        value={visitor.vehicleType}
-                        setValue={(v) =>
-                          setVisitor({ ...visitor, vehicleType: v })
-                        }
-                        icon={
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                          </svg>
-                        }
-                      />
+                      <div>
+                        <label className="block text-slate-600 text-xs mb-1 font-medium">
+                          Tipo de vehículo
+                        </label>
+                        <select
+                          className="w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition"
+                          value={visitor.vehicleType}
+                          onChange={(e) =>
+                            setVisitor({
+                              ...visitor,
+                              vehicleType: e.target.value,
+                            })
+                          }
+                          required
+                        >
+                          <option value="">Selecciona...</option>
+                          <option value="Carro">Carro</option>
+                          <option value="Moto">Moto</option>
+                        </select>
+                      </div>
                     </div>
 
                     {/* Cierre de grid y paso 3 */}
-                    
+
                     <div className="flex justify-between pt-4">
                       <motion.button
                         whileHover={{ scale: 1.02 }}

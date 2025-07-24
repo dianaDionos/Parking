@@ -18,7 +18,7 @@ import PaqueteriaModal from "../components/PaqueteriaModal";
 
 const resumen = [
   {
-    label: "Parqueaderos libres",
+    label: "Unidad residencial",
     value: 12,
     icon: <FaParking className="text-green-500" size={32} />,
     accent: "bg-green-50 border-green-200 text-green-700",
@@ -43,10 +43,7 @@ const resumen = [
   },
 ];
 
-export default function PanelGuardia({
-  onNuevoRegistro,
-  onNotificarPaqueteria,
-}) {
+export default function PanelGuardia(props) {
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [currentTicketData, setCurrentTicketData] = useState(null);
   const [ticketGenerated, setTicketGenerated] = useState(false);
@@ -133,7 +130,7 @@ export default function PanelGuardia({
         <div className="flex flex-col md:flex-row gap-4">
           {/* Nuevo Visitante */}
           <button
-            onClick={onNuevoRegistro}
+            onClick={props.onNuevoRegistro}
             className="flex-1 flex flex-col items-center justify-center gap-2 bg-blue-50 border border-blue-200 rounded-xl py-5 px-2 shadow-sm hover:bg-blue-100 transition"
           >
             <FaPlus className="text-2xl text-blue-400" />
@@ -153,7 +150,7 @@ export default function PanelGuardia({
           </button>
           {/* Notificar Paquetería */}
           <button
-            onClick={onNotificarPaqueteria}
+            onClick={props.onNotificarPaqueteria}
             className="flex-1 flex flex-col items-center justify-center gap-2 bg-yellow-50 border border-yellow-200 rounded-xl py-5 px-2 shadow-sm hover:bg-yellow-100 transition"
           >
             <FaBoxOpen className="text-2xl text-yellow-500" />

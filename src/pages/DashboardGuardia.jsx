@@ -3,22 +3,22 @@ import ParkingTable from "../components/ParkingTable";
 import VisitorTable from "../components/VisitorTable";
 import VisitorModal from "../components/VisitorModal";
 import PaqueteriaTable from "../components/PackageTable";
-import SearchBar from "../components/SearchBar";
+import PaqueteriaModal from "../components/PaqueteriaModal";
+import ExitModal from "../components/ExitModal";
 import {
   FaParking,
   FaUserFriends,
-  FaPlusCircle,
   FaBoxOpen,
+  FaSmile,
+  FaQuestionCircle,
 } from "react-icons/fa";
 import React, { useState } from "react";
 import parkingService from "../services/parkingService";
 import FacturaVisual from "../components/FacturaVisual";
 import ReciboSalida from "../components/ReciboSalida";
 import TicketVisual from "../components/TicketVisual";
-import PaqueteriaModal from "../components/PaqueteriaModal";
-import ExitModal from "../components/ExitModal";
 
-// DATOS DE PRUEBA PARA VISITANTES
+
 const mockVisitors = [
   {
     name: "Pedro López",
@@ -46,7 +46,6 @@ const mockVisitors = [
   },
 ];
 
-// DATOS DE PRUEBA PARA PARQUEADERO
 const parkingDataPrueba = [
   {
     id: 1,
@@ -113,17 +112,17 @@ export default function DemoPage() {
   ]);
   const [exitModalOpen, setExitModalOpen] = useState(false);
   const [exitData, setExitData] = useState(null);
+  const celadorName = "Carlos"; 
 
-  // Cargar parqueadero real
+  const [showHelp, setShowHelp] = useState(false);
+
   const loadParking = () => {
     setParking(parkingService.getVehicles());
   };
 
-  // Agregar visitante (usa ParkingService si tiene vehículo)
   const handleAddVisitor = async (visitorData) => {
     setVisitors((prev) => [...prev, visitorData]);
     if (visitorData.hasVehicle) {
-      // Genera ticket y agrega a parking
       const ticket = await parkingService.generateTicket(visitorData, {
         plate: visitorData.plate,
         vehicleType: visitorData.vehicleType === "Carro" ? "car" : "moto",
@@ -134,7 +133,6 @@ export default function DemoPage() {
     setModalOpen(false);
   };
 
-  // Registrar salida desde Visitantes
   const handleVisitorExit = (visitor, idx) => {
     setExitData({ ...visitor, idx, source: "visitor" });
     setExitModalOpen(true);
@@ -155,19 +153,15 @@ export default function DemoPage() {
             : v
         )
       );
-      // Si tiene vehículo, elimina de parqueadero
       if (registro.hasVehicle && registro.plate) {
         setParking((prev) =>
           prev.filter((p) => p.licensePlate !== registro.plate)
         );
       }
-      // Si hay factura, muestra el resumen
       if (facturaData) setPrintData({ type: "factura", data: facturaData });
       else setPrintData({ type: "salida", data: registro });
     } else if (registro.source === "parking") {
-      // Elimina de parqueadero
       setParking((prev) => prev.filter((p) => p.id !== registro.id));
-      // Busca y actualiza visitante relacionado
       setVisitors((prev) =>
         prev.map((v) =>
           v.plate === registro.licensePlate
@@ -175,19 +169,16 @@ export default function DemoPage() {
             : v
         )
       );
-      // Si hay factura, muestra el resumen
       if (facturaData) setPrintData({ type: "factura", data: facturaData });
       else setPrintData({ type: "salida", data: registro });
     }
     setExitModalOpen(false);
   };
 
-  // Reimprimir ticket/factura
   const handleReprint = (visitor) => {
     if (!visitor.hasVehicle) {
       setPrintData({ type: "salida", data: visitor });
     } else if (visitor.status === "salido") {
-      // Buscar última factura
       const ticket = parkingService
         .getTickets()
         .find((t) => t.licensePlate === visitor.plate);
@@ -216,42 +207,100 @@ export default function DemoPage() {
     loadParking();
   }, []);
 
+  // Hora actual para el saludo
+  const [hora, setHora] = useState(new Date());
+  React.useEffect(() => {
+    const timer = setInterval(() => setHora(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
-    <div className="p-6 space-y-6 max-w-screen-xl mx-auto">
-      {/* Encabezado y acciones */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
-            Panel de Ingresos
-          </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Control rápido de visitantes, paqueteria y parqueaderos
-          </p>
+    <div className="p-4 md:p-6 space-y-8 max-w-screen-xl mx-auto relative">
+      {/* Saludo y ayuda visual */}
+      <header className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+        <div className="flex items-center gap-4">
+          <FaSmile className="text-4xl text-blue-400" aria-label="Bienvenida" />
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-800">
+              ¡Hola, {celadorName}!
+            </h1>
+            <p className="text-sm text-slate-500">
+              {hora.toLocaleTimeString("es-CO", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}{" "}
+              — Bienvenido al panel de control. Gestiona visitantes,
+              parqueaderos y paquetería de forma rápida y sencilla.
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col md:flex-row items-stretch gap-2 w-full md:w-auto">
-          <SearchBar
-            onSearch={(q) => alert("Buscar: " + q)}
-            onAddVisitor={handleAddVisitor}
-          />
+        <button
+          onClick={() => setShowHelp(true)}
+          className="flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-2 rounded-lg font-medium hover:bg-blue-100 transition focus:outline-none focus:ring-2 focus:ring-blue-200"
+          aria-label="Ayuda rápida"
+        >
+          <FaQuestionCircle />
+          Ayuda rápida
+        </button>
+      </header>
+
+      {/* Tips visuales */}
+      <section
+        className="bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-center gap-4 text-blue-700 text-sm"
+        aria-live="polite"
+      >
+        <FaQuestionCircle className="text-lg" />
+        <span>
+          Usa la barra de búsqueda en cada módulo para encontrar información
+          rápidamente. Navega con <b>Tab</b> y accede a acciones con{" "}
+          <b>Enter</b> o <b>Espacio</b>.
+        </span>
+      </section>
+
+      {/* Resumen de módulos */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5 flex flex-col items-center shadow-sm">
+          <FaUserFriends className="text-3xl text-blue-400 mb-2" />
+          <span className="text-2xl font-bold text-blue-700">
+            {visitors.length}
+          </span>
+          <span className="text-sm text-blue-700">Visitantes</span>
         </div>
-      </div>
+        <div className="rounded-2xl border border-green-100 bg-green-50 p-5 flex flex-col items-center shadow-sm">
+          <FaParking className="text-3xl text-green-400 mb-2" />
+          <span className="text-2xl font-bold text-green-700">
+            {parking.length}
+          </span>
+          <span className="text-sm text-green-700">Parqueaderos ocupados</span>
+        </div>
+        <div className="rounded-2xl border border-yellow-100 bg-yellow-50 p-5 flex flex-col items-center shadow-sm">
+          <FaBoxOpen className="text-3xl text-yellow-400 mb-2" />
+          <span className="text-2xl font-bold text-yellow-700">
+            {paqueteria.length}
+          </span>
+          <span className="text-sm text-yellow-700">Paquetes pendientes</span>
+        </div>
+      </section>
 
       {/* Panel de registro rápido */}
-      <div className="rounded-2xl bg-white shadow p-4 border border-slate-100">
+      <section className="rounded-2xl bg-white shadow p-4 border border-slate-100">
         <PanelGuardia
           onNuevoRegistro={() => setModalOpen(true)}
           onNotificarPaqueteria={() => setPaqueteriaModalOpen(true)}
         />
-      </div>
+      </section>
 
       {/* Tabla Visitantes */}
-      <div className="rounded-2xl bg-white shadow border border-blue-100 p-0 overflow-hidden">
+      <section
+        className="rounded-2xl bg-white shadow border border-blue-100 p-0 overflow-hidden"
+        aria-label="Tabla de visitantes"
+      >
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <h2 className="text-md font-semibold flex items-center gap-2 text-blue-700">
             <FaUserFriends className="text-blue-400" /> Visitantes
           </h2>
-          <span className="hidden md:inline-block bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1 rounded-full border border-blue-100">
-            Tarifa parqueadero: $5.000 | Multa: $1.000
+          <span className="bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1 rounded-full border border-blue-100">
+            {visitors.length} visitantes
           </span>
         </div>
         <div className="p-4 pt-0">
@@ -262,29 +311,38 @@ export default function DemoPage() {
             onReprint={handleReprint}
           />
         </div>
-      </div>
+      </section>
 
       {/* Tabla Parqueadero */}
-      <div className="rounded-2xl bg-white shadow border border-green-100 p-0 overflow-hidden">
+      <section
+        className="rounded-2xl bg-white shadow border border-green-100 p-0 overflow-hidden"
+        aria-label="Tabla de parqueadero"
+      >
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <h2 className="text-md font-semibold flex items-center gap-2 text-green-700">
             <FaParking className="text-green-400" /> Parqueadero
           </h2>
-          <span className="hidden md:inline-block bg-green-50 text-green-700 text-xs font-medium px-3 py-1 rounded-full border border-green-100">
-            Tarifa parqueadero: $5.000 | Multa: $1.000
+          <span className="bg-green-50 text-green-700 text-xs font-medium px-3 py-1 rounded-full border border-green-100">
+            {parking.length} parqueaderos
           </span>
         </div>
         <div className="p-4 pt-0">
           <ParkingTable parking={parking} onExit={handleParkingExit} />
         </div>
-      </div>
+      </section>
 
       {/* Tabla Paquetería */}
-      <div className="rounded-2xl bg-white shadow border border-yellow-100 p-0 overflow-hidden">
+      <section
+        className="rounded-2xl bg-white shadow border border-yellow-100 p-0 overflow-hidden"
+        aria-label="Tabla de paquetería"
+      >
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
           <h2 className="text-md font-semibold flex items-center gap-2 text-yellow-700">
             <FaBoxOpen className="text-yellow-400" /> Paquetería pendiente
           </h2>
+          <span className="bg-yellow-50 text-yellow-700 text-xs font-medium px-3 py-1 rounded-full border border-yellow-100">
+            {paqueteria.length} paquetes
+          </span>
         </div>
         <div className="p-4 pt-0">
           <PaqueteriaTable
@@ -292,7 +350,7 @@ export default function DemoPage() {
             onEntregar={handleEntregar}
           />
         </div>
-      </div>
+      </section>
 
       {/* Modal de visitante */}
       <VisitorModal
@@ -356,6 +414,43 @@ export default function DemoPage() {
         isOpen={paqueteriaModalOpen}
         onClose={() => setPaqueteriaModalOpen(false)}
         onRegister={handleRegisterPaqueteria}
+      />
+      {/* Modal de ayuda rápida */}
+      {showHelp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+          <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full relative">
+            <button
+              className="absolute top-2 right-2 text-slate-400 hover:text-slate-700"
+              onClick={() => setShowHelp(false)}
+            >
+              ×
+            </button>
+            <h3 className="text-lg font-bold mb-2 text-blue-700 flex items-center gap-2">
+              <FaQuestionCircle /> Ayuda rápida
+            </h3>
+            <ul className="list-disc pl-5 text-slate-700 space-y-2 text-sm">
+              <li>
+                Para registrar un visitante, haz clic en <b>Nuevo visitante</b>.
+              </li>
+              <li>
+                Para registrar la salida, usa el botón <b>Salida</b> en la
+                tabla.
+              </li>
+              <li>
+                Busca por nombre, placa o apartamento en la barra superior de
+                cada módulo.
+              </li>
+              <li>¿Dudas? Contacta al administrador o revisa el manual.</li>
+            </ul>
+          </div>
+        </div>
+      )}
+      {/* Bot mascot en la esquina inferior derecha */}
+      <img
+        src=""
+        alt="Bot asistente"
+        className="fixed bottom-4 right-4 w-24 h-24 z-50 drop-shadow-xl"
+        style={{ pointerEvents: "none" }}
       />
     </div>
   );

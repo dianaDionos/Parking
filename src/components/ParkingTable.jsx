@@ -5,46 +5,85 @@ import {
   FaMotorcycle,
   FaCarAlt,
   FaParking,
+  FaSearch,
 } from "react-icons/fa";
+import Paginator from "./Paginator";
 
 const iconByType = {
-  car: <FaCarAlt className="text-indigo-500 text-xl mx-auto" />,
-  moto: <FaMotorcycle className="text-indigo-500 text-xl mx-auto" />,
+  car: <FaCarAlt className="text-green-500 text-xl mx-auto" />,
+  moto: <FaMotorcycle className="text-green-500 text-xl mx-auto" />,
   libre: <FaParking className="text-slate-400 text-xl mx-auto" />,
 };
 
 export default function ParkingTable({ parking = [], onExit }) {
-  const sorted = [...parking].sort((a, b) => (a.status === "libre" ? 1 : -1));
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(5);
+
+  // Filtrado por placa, nombre, apto, interior
+  const filtered = parking.filter((v) => {
+    const s = search.toLowerCase();
+    return (
+      v.licensePlate?.toLowerCase().includes(s) ||
+      v.visitorName?.toLowerCase().includes(s) ||
+      v.apartment?.toLowerCase().includes(s) ||
+      v.interior?.toLowerCase().includes(s)
+    );
+  });
+
+  const sorted = [...filtered].sort((a, b) => (a.status === "libre" ? 1 : -1));
+  const totalPages = Math.max(1, Math.ceil(sorted.length / perPage));
+  const paginated = sorted.slice((page - 1) * perPage, page * perPage);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [perPage, sorted.length, totalPages]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
-      className="rounded-2xl border border-slate-200 shadow-lg bg-white p-4 md:p-6 max-w-5xl mx-auto"
+      className="rounded-2xl border border-green-200 shadow-lg bg-white p-4 md:p-6 max-w-5xl mx-auto"
     >
+      <div className="mb-4 flex flex-col md:flex-row gap-2 items-center justify-between">
+        <div className="relative w-full md:w-72">
+          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-green-400" />
+          <input
+            type="text"
+            className="w-full pl-9 pr-4 py-2 rounded-xl border border-green-200 bg-green-50 text-green-700 focus:outline-none focus:ring-2 focus:ring-green-100 transition"
+            placeholder="Buscar placa, nombre, apto..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <span className="text-xs text-green-400">
+          {filtered.length} parqueaderos
+        </span>
+      </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-slate-700">
+        <table className="min-w-full text-sm text-black">
           <thead>
             <tr>
-              <Th className="bg-indigo-50 text-indigo-700 text-center rounded-tl-2xl">
+              <Th className="bg-green-50 text-green-700 text-center rounded-tl-2xl">
                 #
               </Th>
-              <Th className="bg-indigo-50 text-indigo-700 text-center border-r border-slate-100">
+              <Th className="bg-green-50 text-green-700 text-center border-r border-slate-100">
                 Estado
               </Th>
-              <Th className="bg-indigo-50 text-indigo-700 text-center border-r border-slate-100">
+              <Th className="bg-green-50 text-green-700 text-center border-r border-slate-100">
                 Vehículo
               </Th>
               <Th
                 colSpan={2}
-                className="bg-indigo-50 text-indigo-700 text-center border-r border-slate-100"
+                className="bg-green-50 text-green-700 text-center border-r border-slate-100"
               >
                 Visitante / Residente
               </Th>
-              <Th className="bg-indigo-50 text-indigo-700 text-center border-r border-slate-100">
+              <Th className="bg-green-50 text-green-700 text-center border-r border-slate-100">
                 Ingreso
               </Th>
-              <Th className="bg-indigo-50 text-indigo-700 text-center rounded-tr-2xl">
+              <Th className="bg-green-50 text-green-700 text-center rounded-tr-2xl">
                 Acción
               </Th>
             </tr>
@@ -59,23 +98,25 @@ export default function ParkingTable({ parking = [], onExit }) {
             </tr>
           </thead>
           <tbody>
-            {sorted.length === 0 ? (
+            {paginated.length === 0 ? (
               <tr>
-                <Td colSpan={7} className="text-center py-8 text-slate-400">
+                <Td colSpan={7} className="text-center py-8 text-green-400">
                   No hay parqueaderos registrados.
                 </Td>
               </tr>
             ) : (
-              sorted.map((v, index) => (
+              paginated.map((v, index) => (
                 <motion.tr
                   key={v.id || v.plate || index}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: index * 0.04 }}
-                  className="hover:bg-indigo-50 transition"
+                  className={`transition-colors ${
+                    index % 2 === 0 ? "bg-white" : "bg-green-50"
+                  } hover:bg-green-100`}
                 >
                   {/* N° */}
-                  <Td className="text-center font-bold text-indigo-700">{`#${
+                  <Td className="text-center font-bold text-green-700">{`#${
                     v.spot || index + 1
                   }`}</Td>
                   {/* Estado */}
@@ -91,29 +132,29 @@ export default function ParkingTable({ parking = [], onExit }) {
                     )}
                   </Td>
                   {/* Vehículo */}
-                  <Td className="text-center">
+                  <Td className="text-center text-black">
                     <div className="flex flex-col items-center">
                       {iconByType[v.type]}
-                      <span className="text-xs">
+                      <span className="text-xs text-black">
                         {v.licensePlate || v.plate || "—"}
                       </span>
                     </div>
                   </Td>
                   {/* Nombre */}
-                  <Td className="text-center font-medium">
+                  <Td className="text-center font-medium text-black">
                     {v.visitorName || v.name || "—"}
                   </Td>
                   {/* Apto / Interior */}
-                  <Td className="text-center">
+                  <Td className="text-center text-black">
                     <div className="text-xs">{v.apartment || "—"}</div>
                     <div className="text-xs text-slate-500">
                       {v.interior || "—"}
                     </div>
                   </Td>
                   {/* Ingreso */}
-                  <Td className="text-center">
+                  <Td className="text-center text-black">
                     {v.entryTime ? (
-                      <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">
+                      <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">
                         {new Date(v.entryTime).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
@@ -128,7 +169,7 @@ export default function ParkingTable({ parking = [], onExit }) {
                     {v.status === "ocupado" ? (
                       <button
                         onClick={() => onExit(v)}
-                        className="flex items-center justify-center gap-1 text-xs text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1 rounded-full shadow transition"
+                        className="flex items-center justify-center gap-1 text-xs text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded-full shadow transition"
                       >
                         <FaSignOutAlt />
                         Salida
@@ -143,6 +184,15 @@ export default function ParkingTable({ parking = [], onExit }) {
           </tbody>
         </table>
       </div>
+      <Paginator
+        page={page}
+        setPage={setPage}
+        totalPages={totalPages}
+        perPage={perPage}
+        setPerPage={setPerPage}
+        totalItems={sorted.length}
+        color="green"
+      />
     </motion.div>
   );
 }
@@ -224,7 +274,6 @@ const parkingDataPrueba = [
   },
 ];
 
-// Uso del componente ParkingTable con datos de prueba
 export function ParkingLot() {
   const [parking, setParking] = useState(parkingDataPrueba);
 
@@ -232,7 +281,14 @@ export function ParkingLot() {
     setParking((prev) =>
       prev.map((v) =>
         v.id === exitingSpot.id
-          ? { ...v, status: "libre", visitorName: "", apartment: "", interior: "", entryTime: null }
+          ? {
+              ...v,
+              status: "libre",
+              visitorName: "",
+              apartment: "",
+              interior: "",
+              entryTime: null,
+            }
           : v
       )
     );
